@@ -1,9 +1,8 @@
-#!/usr/bin/ruby
 # coding : utf-8
 
 require 'MeCab'
 sentence = "太郎はこの本を二郎を見た女性に渡した。"
-
+p sentence.encoding
 begin
      
      print MeCab::VERSION, "\n"	
