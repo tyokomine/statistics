@@ -23,16 +23,14 @@ def cos_similarity(s1,s2)
   ue = 0
   x = 0
   y = 0
-  @tf_idf.each do |k,v|
-    if word1.include?(k) && word2.include?(k)
-      ue += v*v
-      x += v*v
-      y += v*v
-    elsif word1.include?(k)
-      x += v*v
-    elsif word2.include?(k)
-      y += v*v
-    end
+  word1.each do |w|
+    v = @tf_idf[w]
+    ue += v*v if word2.include?(w)
+    x += v*v
+  end
+  word2.each do |w|
+    v = @tf_idf[w]
+    y += v*v
   end
   cos_s = ue/(Math.sqrt(x)+Math.sqrt(y))
   return cos_s
