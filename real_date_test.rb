@@ -3,11 +3,13 @@ require 'MeCab'
 require 'mysql2'
 require 'dbi'
 
+@mecab = MeCab::Tagger.new
+
 #文章から記号、助詞、助動詞を省いた単語の配列を返す関数
 def return_word(s)
-  c = MeCab::Tagger.new(ARGV.join(""))
+#  c = MeCab::Tagger.new(ARGV.join(""))
   word = []
-  node = c.parseToNode(s)
+  node = @mecab.parseToNode(s)
   begin
     node = node.next
     if /^記号/ !~ node.feature.force_encoding("UTF-8") && /^助詞/ !~ node.feature.force_encoding("UTF-8") && /^助動詞/ !~ node.feature.force_encoding("UTF-8")
