@@ -1,11 +1,12 @@
 # coding: UTF-8
 require 'MeCab'
+@c = MeCab::Tagger.new
 
 #文章から記号、助詞、助動詞を省いた単語の配列を返す関数
 def return_word(s)
-  c = MeCab::Tagger.new(ARGV.join(""))
+#  c1 = MeCab::Tagger.new("-Ochasen")
   word = []
-  node = c.parseToNode(s)
+  node = @c.parseToNode(s)
   begin
     node = node.next
     if /^記号/ !~ node.feature.force_encoding("UTF-8") && /^助詞/ !~ node.feature.force_encoding("UTF-8") && /^助動詞/ !~ node.feature.force_encoding("UTF-8")
@@ -85,18 +86,16 @@ sentence = "太郎はこの本を二郎を見た女性に渡した。"
 
 sentences = [s1,s2,s3,s4,s5,s6,sentence]
 
-c = MeCab::Tagger.new(ARGV.join(""))
 word_hash = Hash.new(Array.new)
 word_array = Array.new
 
 sentences.each_with_index do |s,i|
-  node = c.parseToNode(s)
+  node = @c.parseToNode(s)
   word_hash[i] = Array.new
   word_hash[i] = return_word(s)
   word_array += word_hash[i]
 end
 p word_hash
-
 word_num = {}
 word_array.each do |key|
   word_num[key] ||= 0
