@@ -12,8 +12,9 @@ def return_word(s)
   node = @mecab.parseToNode(s)
   begin
     node = node.next
-    if /^記号/ !~ node.feature.force_encoding("UTF-8") && /^助詞/ !~ node.feature.force_encoding("UTF-8") && /^助動詞/ !~ node.feature.force_encoding("UTF-8")
+    if /^記号/ !~ node.feature.force_encoding("UTF-8") && /^助詞/ !~ node.feature.force_encoding("UTF-8") && /^助動詞/ !~ node.feature.force_encoding("UTF-8")&& /^数/ !~ node.feature.force_encoding("UTF-8") 
       word << node.surface.force_encoding('UTF-8')
+    p node.surface.force_encoding('UTF-8'),node.feature.force_encoding('UTF-8')
     end
   end until node.next.feature.include?("BOS/EOS")
   return word
@@ -28,16 +29,14 @@ def cos_similarity(s1,s2)
   ue = 0
   x = 0
   y = 0
-  @tf_idf.each do |k,v|
-    if word1.include?(k) && word2.include?(k)
-      ue += v*v
-      x += v*v
-      y += v*v
-    elsif word1.include?(k)
-      x += v*v
-    elsif word2.include?(k)
-      y += v*v
-    end
+  word1.each do |w|
+    v = @tf_idf[w]
+    ue += v*v if word2.include?(w)
+    x += v*v
+  end
+  word2.each do |w|
+    v = @tf_idf[w]
+    y += v*v
   end
   cos_s = ue/(Math.sqrt(x)+Math.sqrt(y))
   return cos_s
@@ -51,8 +50,6 @@ def correlation_similarity(s1,s2)
  word2 = s2
   ue = 0
   x = 0
-  y = 0
-  cnt = 0
   #平均を求める
   @tf_idf.each do |k,v|
     x += v if word1.include?(k)
@@ -81,29 +78,23 @@ def correlation_similarity(s1,s2)
   return cor_s
 end
 
-
-#テキストはサンプルです
-s1 = "パズドラまじでおもしろい！神ゲーだ！！！"
-s2 = 'パズドラとかやってるやつは死んだらいい。'
-s3 = 'パズドラはそこそこいいゲームだよね'
-s4 = 'みんなパズドラやろうよ！'
-s5 = 'モンハンもパズドラもいいゲーム！'
-s6 = 'パズドラやりすぎて死んだ'
-sentence = "太郎はこの本を二郎を見た女性に渡した。"
-
-c = MeCab::Tagger.new(ARGV.join(""))
 word_hash = Hash.new(Array.new)
 word_array = Array.new
 sentences = Array.new
 row = Array.new
+word_num = {}
 client= Mysql2::Client.new(:host =>'localhost', :username =>  'root',:password =>  '1x60Ks4N',:database =>  'wiretap')
 cnt = 0
-client.query('select text from tweet limit 500').each do |col|
+client.query('select distinct text from tweet limit 500').each do |col|
 #  puts col['text']
   word_hash[cnt] = Array.new
   word_hash[cnt] = return_word(col['text'])
   word_array += word_hash[cnt]
   sentences << word_hash[cnt]
+  word_hash[cnt].each do |key|
+    word_num[key] ||= 0
+    word_num[key] += 1
+  end
   row << col['text']
   cnt += 1
 end
@@ -115,32 +106,31 @@ sentences.each_with_index do |s,i|
   word_hash[i] = return_word(s)
   word_array += word_hash[i]
 end
-=end
-p word_hash
-
+#p word_hash
 word_num = {}
-word_array.each do |key|
-  word_num[key] ||= 0
-  word_num[key] += 1
-end
-puts word_num
 
+=end
+
+puts word_num
 words_num = word_array.size
+p words_num
 @tf_idf = {}
 
 word_num.each do |key,value|
  @tf_idf[key] = (value/words_num.to_f) * Math.log(sentences.size/value.to_f)
 end
-p @tf_idf
+#p @tf_idf
 
+target_id = 4107
+p row[target_id]
 p "== cos similarity =="
 
 ans = Hash.new()
-s = sentences[0]
+s = sentences[target_id]
 #sentences.each_with_index do |s,i|
   sentences.each_with_index do |s1,j|
     key = j
-    if 0 == j
+    if target_id == j
       ans[key] = 0
     else
       ans[key] = cos_similarity(s,s1)
@@ -148,8 +138,7 @@ s = sentences[0]
     #printf "s%d s%d %f \n",i+1,j+1,cos_similarity(s,s1)
   end
 #end
-p ans
-p row[0]
+#p ans
 rank = 50
 cnt = 0
 #降順にソート
