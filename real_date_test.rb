@@ -14,7 +14,7 @@ def return_word(s)
     node = node.next
     if /^記号/ !~ node.feature.force_encoding("UTF-8") && /^助詞/ !~ node.feature.force_encoding("UTF-8") && /^助動詞/ !~ node.feature.force_encoding("UTF-8")&& /^数/ !~ node.feature.force_encoding("UTF-8") 
       word << node.surface.force_encoding('UTF-8')
-    p node.surface.force_encoding('UTF-8'),node.feature.force_encoding('UTF-8')
+#    p node.surface.force_encoding('UTF-8'),node.feature.force_encoding('UTF-8')
     end
   end until node.next.feature.include?("BOS/EOS")
   return word
@@ -77,7 +77,7 @@ def correlation_similarity(s1,s2)
   cor_s = ue/(Math.sqrt(x)+Math.sqrt(y))
   return cor_s
 end
-
+t0 = Time.now
 word_hash = Hash.new(Array.new)
 word_array = Array.new
 sentences = Array.new
@@ -85,7 +85,7 @@ row = Array.new
 word_num = {}
 client= Mysql2::Client.new(:host =>'localhost', :username =>  'root',:password =>  '1x60Ks4N',:database =>  'wiretap')
 cnt = 0
-client.query('select distinct text from tweet limit 500').each do |col|
+client.query('select distinct text from tweet limit 100000').each do |col|
 #  puts col['text']
   word_hash[cnt] = Array.new
   word_hash[cnt] = return_word(col['text'])
@@ -111,7 +111,7 @@ word_num = {}
 
 =end
 
-puts word_num
+#puts word_num
 words_num = word_array.size
 p words_num
 @tf_idf = {}
@@ -121,10 +121,11 @@ word_num.each do |key,value|
 end
 #p @tf_idf
 
+t1 = Time.now
 target_id = 4107
 p row[target_id]
 p "== cos similarity =="
-
+#p sentences
 ans = Hash.new()
 s = sentences[target_id]
 #sentences.each_with_index do |s,i|
@@ -170,5 +171,9 @@ ans2.sort{|a, b| b[1] <=> a[1]}.each do|key, value|
 end
 
 =end
+t2 = Time.now
+
+puts "#{t1-t0} sec for tf-idf"
+puts "#{t2-t1} sec for cos sim"
 
 

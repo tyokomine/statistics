@@ -104,10 +104,13 @@ puts word_num
 words_num = word_array.size
 @tf_idf = {}
 
+f = File.open('test-tf-idf.txt','w')
 word_num.each do |key,value|
  @tf_idf[key] = (value/words_num.to_f) * Math.log(sentences.size/value.to_f)
+ f.puts(key+','+@tf_idf[key].to_s)
 end
 p @tf_idf
+
 
 p "== cos similarity =="
 ans = Hash.new()
